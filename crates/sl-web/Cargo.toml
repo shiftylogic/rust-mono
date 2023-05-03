@@ -1,0 +1,16 @@
+[package]
+name = "sl_web"
+version = "0.1.0"
+edition = "2021"
+
+description = "Wrapper / implementation for building out simple web services"
+license = "MIT"
+
+authors = [ "Robert Anderson" ]
+homepage = "https://me.shiftylogic.dev"
+repository = "https://github.com/shiftylogic/rust-mono/crates/sl-web"
+
+
+[dependencies]
+log = { version = "0.4.17", default-features = false }
+

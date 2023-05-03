@@ -1,0 +1,16 @@
+[package]
+name = "sl_core"
+version = "0.1.0"
+edition = "2021"
+
+description = "A set of helpers and functions used in several libraries / apps."
+license = "MIT"
+
+authors = [ "Robert Anderson" ]
+homepage = "https://me.shiftylogic.dev"
+repository = "https://github.com/shiftylogic/rust-mono/crates/sl-core"
+
+
+[dependencies]
+log = { version = "0.4.17", default-features = false }
+

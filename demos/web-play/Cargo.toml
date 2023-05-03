@@ -1,0 +1,27 @@
+[package]
+name = "web-play"
+version = "0.1.0"
+edition = "2021"
+
+description = "Web playground / demo"
+license = "MIT"
+
+authors = [ "Robert Anderson" ]
+homepage = "https://me.shiftylogic.dev"
+repository = "https://github.com/shiftylogic/rust-mono/demos/web-play"
+
+
+[dependencies]
+log = { version = "0.4.17", default-features = false }
+env_logger = { version = "0.10.0", default-features = false }
+
+
+[dependencies.sl_core]
+path = "../../crates/sl-core"
+version = "=0.1.0"
+
+
+[dependencies.sl_web]
+path = "../../crates/sl-web"
+version = "=0.1.0"
+
