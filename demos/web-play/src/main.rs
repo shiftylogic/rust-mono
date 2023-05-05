@@ -4,10 +4,6 @@
  *
  */
 
-extern crate env_logger;
-extern crate sl_core;
-extern crate sl_web;
-
 use std::alloc;
 
 use sl_core::allocators;
@@ -21,7 +17,12 @@ fn main() {
     env_logger::init();
 
     dump_allocations("entering <main> block");
-    {}
+    {
+        match sl_web::run() {
+            | Ok(_) => log::info!("Stopped."),
+            | Err(e) => log::error!("[ERROR] {:?}", e),
+        }
+    }
     dump_allocations("exiting <main> block");
 }
 

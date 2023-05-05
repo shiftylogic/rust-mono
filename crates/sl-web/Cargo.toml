@@ -1,5 +1,5 @@
 [package]
-name = "sl_web"
+name = "sl-web"
 version = "0.1.0"
 edition = "2021"
 
@@ -11,6 +11,19 @@ homepage = "https://me.shiftylogic.dev"
 repository = "https://github.com/shiftylogic/rust-mono/crates/sl-web"
 
 
+[features]
+rustls = [ "tokio-rustls", "rustls-pemfile" ]
+openssl = [ "tokio-native-tls" ]
+
+
 [dependencies]
 log = { version = "0.4.17", default-features = false }
+
+axum = { version = "0.6.18", default-features = false }
+# hyper = { version = "1.0.0-rc.3", default-features = false }
+tokio = { version = "1.28.0", default-features = false, features = [ "io-util", "net", "rt-multi-thread" ] }
+
+rustls-pemfile = { version = "1.0.2", default-features = false, optional = true }
+tokio-rustls = { version = "0.24.0", default-features = false, optional = true }
+tokio-native-tls = { version = "0.3.1", default-features = false, optional = true }
 

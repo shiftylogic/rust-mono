@@ -16,12 +16,13 @@ log = { version = "0.4.17", default-features = false }
 env_logger = { version = "0.10.0", default-features = false }
 
 
-[dependencies.sl_core]
+[dependencies.sl-core]
 path = "../../crates/sl-core"
 version = "=0.1.0"
 
 
-[dependencies.sl_web]
+[dependencies.sl-web]
 path = "../../crates/sl-web"
 version = "=0.1.0"
+features = [ "rustls" ]
 

@@ -14,5 +14,7 @@ Cargo.lock
 #macOS artifacts
 .DS_Store
 
-# Tooling artifacts
-.tools
+# Metadata, debugging, dev work, tooling
+.cert/
+.config/
+.tools/

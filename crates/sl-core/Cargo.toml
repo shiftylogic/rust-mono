@@ -1,5 +1,5 @@
 [package]
-name = "sl_core"
+name = "sl-core"
 version = "0.1.0"
 edition = "2021"
 
