@@ -1,4 +1,6 @@
 /*++
+ * Copyright (c) 2023-present Robert Anderson.
+ * SPDX-License-Identifier: MIT
  *
  * Web playground / demo
  *

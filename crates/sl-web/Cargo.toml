@@ -13,7 +13,7 @@ repository = "https://github.com/shiftylogic/rust-mono/crates/sl-web"
 
 [features]
 rustls = [ "tokio-rustls", "rustls-pemfile" ]
-openssl = [ "tokio-native-tls" ]
+nativetls= [ "tokio-native-tls" ]
 
 
 [dependencies]

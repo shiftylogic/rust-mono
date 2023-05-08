@@ -1,15 +1,12 @@
 /*++
+ * Copyright (c) 2023-present Robert Anderson.
+ * SPDX-License-Identifier: MIT
  *
  * Crate: sl_web
  *
  */
 
-use std::{
-    fs::File,
-    io::BufReader,
-    net::SocketAddr,
-    sync::Arc,
-};
+use std::net::SocketAddr;
 
 use tokio::{
     io::AsyncWriteExt,
@@ -19,19 +16,14 @@ use tokio::{
     },
     runtime::Builder,
 };
-use tokio_rustls::{
-    rustls::{
-        Certificate,
-        PrivateKey,
-        ServerConfig,
-    },
-    TlsAcceptor,
-};
+
+mod tls;
+
 
 #[derive(Debug)]
 pub enum Error {
     IOError,
-    TLSError,
+    TlsError,
 }
 
 impl From<std::io::Error> for Error {
@@ -41,10 +33,10 @@ impl From<std::io::Error> for Error {
     }
 }
 
-impl From<tokio_rustls::rustls::Error> for Error {
-    fn from(err: tokio_rustls::rustls::Error) -> Self {
+impl From<tls::Error> for Error {
+    fn from(err: tls::Error) -> Self {
         log::error!("TLS Error: {:?}", err);
-        Self::TLSError
+        Self.TlsError
     }
 }
 
@@ -64,8 +56,7 @@ pub fn run() -> Result<(), Error> {
 }
 
 async fn run_core() -> Result<(), Error> {
-    let config = load_tls_config()?;
-    let acceptor = TlsAcceptor::from(Arc::new(config));
+    let acceptor = tls::from_cert_and_key()?;
     let listener = TcpListener::bind("127.0.0.1:8443").await?;
 
     loop {
@@ -78,7 +69,7 @@ async fn run_core() -> Result<(), Error> {
 async fn accept_tls(
     addr: SocketAddr,
     stream: TcpStream,
-    acceptor: TlsAcceptor,
+    acceptor: impl tls::Acceptor,
 ) -> Result<(), Error> {
     let mut stream = acceptor.accept(stream).await?;
     let mut output = tokio::io::sink();
@@ -96,38 +87,3 @@ async fn accept_tls(
 }
 
 async fn handler() -> &'static str { "Hello, dude!" }
-
-fn load_tls_config() -> Result<ServerConfig, Error> {
-    let certs = load_certs(".cert/config/live/local.vroov.com/fullchain.pem")?;
-    let key = load_private_key(".cert/config/live/local.vroov.com/privkey.pem")?;
-
-    ServerConfig::builder()
-        .with_safe_defaults()
-        .with_no_client_auth()
-        .with_single_cert(certs, key)
-        .map_err(|err| Error::from(err))
-}
-
-fn load_certs(filename: &str) -> Result<Vec<Certificate>, Error> {
-    let certfile = File::open(filename)?;
-    let mut buf = BufReader::new(certfile);
-
-    let certs = rustls_pemfile::certs(&mut buf)?
-        .iter()
-        .map(|v| Certificate(v.clone()))
-        .collect();
-
-    Ok(certs)
-}
-
-fn load_private_key(filename: &str) -> Result<PrivateKey, Error> {
-    let keyfile = File::open(filename)?;
-    let mut buf = BufReader::new(keyfile);
-
-    match rustls_pemfile::read_one(&mut buf)? {
-        | Some(rustls_pemfile::Item::RSAKey(key)) => Ok(PrivateKey(key)),
-        | Some(rustls_pemfile::Item::PKCS8Key(key)) => Ok(PrivateKey(key)),
-        | Some(rustls_pemfile::Item::ECKey(key)) => Ok(PrivateKey(key)),
-        | _ => Err(Error::TLSError),
-    }
-}
