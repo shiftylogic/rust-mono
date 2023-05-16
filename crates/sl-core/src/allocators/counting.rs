@@ -46,21 +46,8 @@ unsafe impl<Allocator: GlobalAlloc> GlobalAlloc for Counting<Allocator> {
     }
 
     #[inline]
-    unsafe fn alloc_zeroed(&self, layout: Layout) -> *mut u8 {
-        self.1.fetch_add(1, Ordering::Relaxed);
-        self.2.fetch_add(1, Ordering::Relaxed);
-        self.0.alloc_zeroed(layout)
-    }
-
-    #[inline]
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
         self.2.fetch_sub(1, Ordering::Relaxed);
         self.0.dealloc(ptr, layout)
-    }
-
-    #[inline]
-    unsafe fn realloc(&self, ptr: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {
-        self.1.fetch_add(1, Ordering::Relaxed);
-        self.0.realloc(ptr, layout, new_size)
     }
 }
