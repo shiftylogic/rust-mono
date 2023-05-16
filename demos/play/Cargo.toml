@@ -1,29 +1,22 @@
 [package]
-name = "web-play"
+name = "play"
 version = "0.1.0"
 edition = "2021"
 
-description = "Web playground / demo"
+description = "Learning Playground"
 license = "MIT"
 
 authors = [ "Robert Anderson" ]
 homepage = "https://me.shiftylogic.dev"
-repository = "https://github.com/shiftylogic/rust-mono/demos/web-play"
+repository = "https://github.com/shiftylogic/rust-mono/demos/play"
 
 
 [dependencies]
 log = { version = "0.4.17", default-features = false }
 env_logger = { version = "0.10.0", default-features = false }
 
-
 [dependencies.sl-core]
+version = "=0.1.0"
 path = "../../crates/sl-core"
-version = "=0.1.0"
-features = ["alloc-count"]
-
-
-[dependencies.sl-web]
-path = "../../crates/sl-web"
-version = "=0.1.0"
-features = [ "rustls" ]
+features = ["alloc-trace"]
 

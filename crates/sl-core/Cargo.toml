@@ -11,6 +11,13 @@ homepage = "https://me.shiftylogic.dev"
 repository = "https://github.com/shiftylogic/rust-mono/crates/sl-core"
 
 
+[features]
+default = []
+alloc-count = []
+alloc-trace = ["dep:backtrace"]
+
+
 [dependencies]
 log = { version = "0.4.17", default-features = false }
+backtrace = { version = "0.3", optional = true }
 

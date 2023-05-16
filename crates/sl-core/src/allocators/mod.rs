@@ -10,6 +10,12 @@
  *
  */
 
-mod counting;
+cfg_alloc_count! {
+    mod counting;
+    pub use counting::Counting;
+}
 
-pub use counting::Counting;
+cfg_alloc_trace! {
+    mod tracing;
+    pub use tracing::Tracing;
+}

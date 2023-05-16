@@ -6,7 +6,8 @@
  * Module:  allocators/counting
  *
  * Purpose:
- *   Set of custom allocators tailored to specific scenerios.
+ *    Implements a simple allocator that counts the total number
+ *    and active number of allocations.
  *
  */
 

@@ -3,5 +3,6 @@ members = [
     "crates/sl-core",
     # "crates/sl-web",
     # "demos/web-play",
+    "demos/play",
 ]
 
