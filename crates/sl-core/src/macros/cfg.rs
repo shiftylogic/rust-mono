@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: MIT
  *
  * Crate:   sl_core
- * Module:  macros
+ * Module:  macros/cfg
  *
  * Purpose:
- *    Keep all macros in a single place.
+ *    Keep all configuration macros in a single place.
  *
  */
 
@@ -27,4 +27,3 @@ macro_rules! cfg_alloc_trace {
         )*
     }
 }
-

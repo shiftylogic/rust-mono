@@ -18,4 +18,7 @@ cfg_alloc_count! {
 cfg_alloc_trace! {
     mod tracing;
     pub use tracing::Tracing;
+
+    mod tracker;
+    pub use tracker::{Tracker, DefaultTracker};
 }

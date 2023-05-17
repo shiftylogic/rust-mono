@@ -6,17 +6,26 @@
  *
  */
 
-type Allocator = sl_core::allocators::Tracing<std::alloc::System>;
+
+type Allocator = sl_core::allocators::Tracing;
 
 #[global_allocator]
-static GLOBAL: Allocator = Allocator::new(std::alloc::System);
+static GLOBAL: Allocator = Allocator::default();
 
 fn main() {
     env_logger::init();
 
-    let mut rt = Executor::new(1, 10);
-    rt.spawn(1);
-    rt.wait();
+    {
+        let mut rt = Executor::new(1, 10);
+        rt.spawn(1);
+        rt.spawn(8);
+        rt.spawn(9);
+        rt.spawn(42);
+        rt.wait();
+    }
+
+    let mut mem_log = std::fs::File::create("mem.log").expect("failed to create mem log file");
+    GLOBAL.dump_info(&mut mem_log, true);
 }
 
 

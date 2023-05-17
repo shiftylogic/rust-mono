@@ -7,6 +7,7 @@
  */
 
 #[macro_use]
-pub mod macros;
+mod cfg;
 
-pub mod allocators;
+#[macro_use]
+pub mod thread;

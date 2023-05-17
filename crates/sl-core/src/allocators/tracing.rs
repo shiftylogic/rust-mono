@@ -6,10 +6,10 @@
  * Module:  allocators/tracing
  *
  * Purpose:
- *    Implements a wrapper allocator that logs all allocations with
- *    function information and allocation size.
+ *    Implements a wrapper allocator that tracks / logs all memory
+ *    operations.
  *
- *    Based on the following blog post:
+ *    Idea started from the following blog post:
  *     - https://shiver.github.io/post/tracking-heap-allocations-in-rust/
  *
  */
@@ -19,80 +19,84 @@ use std::{
         GlobalAlloc,
         Layout,
     },
-    cell::Cell,
+    cell::RefCell,
+    sync::Mutex,
 };
 
-thread_local! {
-    static GUARD: Cell<bool> = Cell::new(false);
+pub use super::{
+    DefaultTracker,
+    Tracker,
+};
+
+
+thread_entry_guard!(TRACING_GUARD);
+
+
+pub struct Tracing<A = std::alloc::System, T = DefaultTracker>
+where
+    A: GlobalAlloc,
+    T: Tracker,
+{
+    inner:   A,
+    tracker: Mutex<RefCell<T>>,
 }
 
-const UNKNOWN: &str = "<unknown>";
-const IGNORED_SYMBOLS: [&str; 6] = [
-    "_main",
-    "__rg_alloc",
-    "__rust_try",
-    "backtrace::",
-    "sl_core::allocators::tracing::trace_allocation",
-    "<sl_core::allocators::tracing::Tracing",
-];
-
-pub struct Tracing<Allocator>(Allocator);
-
-impl<Allocator> Tracing<Allocator> {
-    pub const fn new(allocator: Allocator) -> Self { Self(allocator) }
+impl Tracing<std::alloc::System, DefaultTracker> {
+    pub const fn default() -> Self {
+        Self {
+            inner:   std::alloc::System,
+            tracker: Mutex::new(RefCell::new(DefaultTracker::new())),
+        }
+    }
 }
 
-unsafe impl<Allocator: GlobalAlloc> GlobalAlloc for Tracing<Allocator> {
+impl<A, T> Tracing<A, T>
+where
+    A: GlobalAlloc,
+    T: Tracker,
+{
+    pub const fn new(inner: A, tracker: T) -> Self {
+        Self {
+            inner,
+            tracker: Mutex::new(RefCell::new(tracker)),
+        }
+    }
+
+    pub fn dump_info<Writer: std::io::Write + ?Sized>(&self, out: &mut Writer, filter_std: bool) {
+        no_reentry_per_thread!(TRACING_GUARD, {
+            let tracker_guard = self.tracker.lock().expect("unable to unwrap tracker");
+            (*tracker_guard)
+                .borrow_mut()
+                .dump_info(out, filter_std)
+                .expect("failed to write tracker data");
+        });
+    }
+}
+
+unsafe impl<A, T> GlobalAlloc for Tracing<A, T>
+where
+    A: GlobalAlloc,
+    T: Tracker,
+{
     #[inline]
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        let ptr = self.0.alloc(layout);
-        trace_allocation(ptr, layout.size());
+        let ptr = self.inner.alloc(layout);
+
+        no_reentry_per_thread!(TRACING_GUARD, {
+            let tracker_guard = self.tracker.lock().expect("unable to unwrap tracker");
+            (*tracker_guard).borrow_mut().track_alloc(ptr, layout);
+        });
+
         ptr
     }
 
     #[inline]
-    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) { self.0.dealloc(ptr, layout); }
-}
+    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+        self.inner.dealloc(ptr, layout);
 
-#[inline]
-fn trace_allocation(ptr: *mut u8, size: usize) {
-    GUARD.with(|guard| {
-        if guard.get() {
-            return;
-        }
-
-        guard.set(true);
-        println!("------------------------------------------------------------");
-        println!("Allocated {size} bytes @ Address {ptr:p}");
-        backtrace::trace(|frame| {
-            backtrace::resolve_frame(frame, |sym| {
-                let fname = sym
-                    .filename()
-                    .map(|f| f.display().to_string())
-                    .unwrap_or_default();
-                if fname.starts_with("/rustc") {
-                    return;
-                }
-
-                let sym_name = sym
-                    .name()
-                    .map(|n| n.to_string())
-                    .unwrap_or(UNKNOWN.to_string());
-
-                if IGNORED_SYMBOLS
-                    .iter()
-                    .any(|sym| sym_name.starts_with(sym) || sym_name.ends_with(sym))
-                {
-                    return;
-                }
-
-                let line_number = sym.lineno().unwrap_or(u32::MAX);
-
-                println!("   > {sym_name} @ line {line_number}");
-            });
-
-            true
+        no_reentry_per_thread!(TRACING_GUARD, {
+            let tracker_guard = self.tracker.lock().expect("unable to unwrap tracker");
+            (*tracker_guard).borrow_mut().track_dealloc(ptr, layout);
         });
-        guard.set(false);
-    });
+    }
 }
