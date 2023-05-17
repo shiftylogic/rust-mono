@@ -22,32 +22,59 @@ use std::{
     },
 };
 
-pub struct Counting<Allocator>(Allocator, AtomicUsize, AtomicUsize);
+pub struct Counting<A = std::alloc::System>
+where
+    A: GlobalAlloc,
+{
+    inner:  A,
+    active: AtomicUsize,
+    total:  AtomicUsize,
+}
 
-impl<Allocator> Counting<Allocator> {
-    pub const fn new(allocator: Allocator) -> Self {
-        Counting(allocator, AtomicUsize::new(0), AtomicUsize::new(0))
+impl Counting<std::alloc::System> {
+    pub const fn default() -> Self {
+        Self {
+            inner:  std::alloc::System,
+            active: AtomicUsize::new(0),
+            total:  AtomicUsize::new(0),
+        }
+    }
+}
+
+impl<A> Counting<A>
+where
+    A: GlobalAlloc,
+{
+    pub const fn new(inner: A) -> Self {
+        Self {
+            inner,
+            active: AtomicUsize::new(0),
+            total: AtomicUsize::new(0),
+        }
     }
 
     pub fn counts(&self) -> (usize, usize) {
         (
-            self.1.load(Ordering::Relaxed),
-            self.2.load(Ordering::Relaxed),
+            self.total.load(Ordering::Relaxed),
+            self.active.load(Ordering::Relaxed),
         )
     }
 }
 
-unsafe impl<Allocator: GlobalAlloc> GlobalAlloc for Counting<Allocator> {
+unsafe impl<A> GlobalAlloc for Counting<A>
+where
+    A: GlobalAlloc,
+{
     #[inline]
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        self.1.fetch_add(1, Ordering::Relaxed);
-        self.2.fetch_add(1, Ordering::Relaxed);
-        self.0.alloc(layout)
+        self.total.fetch_add(1, Ordering::Relaxed);
+        self.active.fetch_add(1, Ordering::Relaxed);
+        self.inner.alloc(layout)
     }
 
     #[inline]
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
-        self.2.fetch_sub(1, Ordering::Relaxed);
-        self.0.dealloc(ptr, layout)
+        self.active.fetch_sub(1, Ordering::Relaxed);
+        self.inner.dealloc(ptr, layout)
     }
 }

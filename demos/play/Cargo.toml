@@ -18,5 +18,5 @@ env_logger = { version = "0.10.0", default-features = false }
 [dependencies.sl-core]
 version = "=0.1.0"
 path = "../../crates/sl-core"
-features = ["alloc-trace"]
+features = ["alloc-count"]
 

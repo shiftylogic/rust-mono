@@ -10,4 +10,7 @@
 mod cfg;
 
 #[macro_use]
+pub mod alloc;
+
+#[macro_use]
 pub mod thread;

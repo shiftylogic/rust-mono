@@ -6,16 +6,15 @@
  *
  */
 
-
-type Allocator = sl_core::allocators::Tracing;
-
-#[global_allocator]
-static GLOBAL: Allocator = Allocator::default();
+// sl_core::enable_global_tracing_alloc!();
+sl_core::enable_global_counting_alloc!();
 
 fn main() {
     env_logger::init();
 
-    {
+    sl_core::trace_block! {
+        "main";
+
         let mut rt = Executor::new(1, 10);
         rt.spawn(1);
         rt.spawn(8);
@@ -23,9 +22,6 @@ fn main() {
         rt.spawn(42);
         rt.wait();
     }
-
-    let mut mem_log = std::fs::File::create("mem.log").expect("failed to create mem log file");
-    GLOBAL.dump_info(&mut mem_log, true);
 }
 
 

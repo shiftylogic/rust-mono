@@ -37,15 +37,25 @@ where
     A: GlobalAlloc,
     T: Tracker,
 {
-    inner:   A,
-    tracker: Mutex<RefCell<T>>,
+    inner:      A,
+    tracker:    Mutex<RefCell<T>>,
+    filter_std: bool,
 }
 
 impl Tracing<std::alloc::System, DefaultTracker> {
     pub const fn default() -> Self {
         Self {
-            inner:   std::alloc::System,
-            tracker: Mutex::new(RefCell::new(DefaultTracker::new())),
+            inner:      std::alloc::System,
+            tracker:    Mutex::new(RefCell::new(DefaultTracker::new())),
+            filter_std: true,
+        }
+    }
+
+    pub const fn default_with_std() -> Self {
+        Self {
+            inner:      std::alloc::System,
+            tracker:    Mutex::new(RefCell::new(DefaultTracker::new())),
+            filter_std: false,
         }
     }
 }
@@ -55,19 +65,20 @@ where
     A: GlobalAlloc,
     T: Tracker,
 {
-    pub const fn new(inner: A, tracker: T) -> Self {
+    pub const fn new(inner: A, tracker: T, filter_std: bool) -> Self {
         Self {
             inner,
             tracker: Mutex::new(RefCell::new(tracker)),
+            filter_std,
         }
     }
 
-    pub fn dump_info<Writer: std::io::Write + ?Sized>(&self, out: &mut Writer, filter_std: bool) {
+    pub fn dump_info<Writer: std::io::Write + ?Sized>(&self, out: &mut Writer) {
         no_reentry_per_thread!(TRACING_GUARD, {
             let tracker_guard = self.tracker.lock().expect("unable to unwrap tracker");
             (*tracker_guard)
                 .borrow_mut()
-                .dump_info(out, filter_std)
+                .dump_info(out, self.filter_std)
                 .expect("failed to write tracker data");
         });
     }
