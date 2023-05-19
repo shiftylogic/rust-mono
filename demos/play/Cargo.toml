@@ -14,6 +14,7 @@ repository = "https://github.com/shiftylogic/rust-mono/demos/play"
 [dependencies]
 log = { version = "0.4.17", default-features = false }
 env_logger = { version = "0.10.0", default-features = false }
+fastrand = "1.9"
 
 [dependencies.sl-core]
 version = "=0.1.0"

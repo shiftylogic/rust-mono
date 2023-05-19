@@ -32,13 +32,56 @@ cfg_alloc_count! {
 
             let sl_ea = GLOBAL.counts();
             log::info!(
-                "<{}> Allocations (Total {} => {}, Active {} => {})",
+                "<{}> Allocations (Total {} => {} ({}), Active {} => {} ({}))",
                 $tag,
                 sl_sa.0,
                 sl_ea.0,
+                sl_ea.0 - sl_sa.0,
                 sl_sa.1,
                 sl_ea.1,
+                sl_ea.1 - sl_sa.1,
             );
+        }
+    }
+
+    #[macro_export]
+    macro_rules! trace_fn {
+        ( $f:expr ) => {
+            {
+                let sl_sa = GLOBAL.counts();
+                let ret = $f();
+                let sl_ea = GLOBAL.counts();
+                log::info!(
+                    "<{}> Allocations (Total {} => {} ({}), Active {} => {} ({}))",
+                    stringify!($f),
+                    sl_sa.0,
+                    sl_ea.0,
+                    sl_ea.0 - sl_sa.0,
+                    sl_sa.1,
+                    sl_ea.1,
+                    sl_ea.1 - sl_sa.1,
+                );
+                ret
+            }
+        };
+
+        ( $f:expr, $($params:tt)*? ) => {
+            {
+                let sl_sa = GLOBAL.counts();
+                let ret = $f( $($params)* );
+                let sl_ea = GLOBAL.counts();
+                log::info!(
+                    "<{}> Allocations (Total {} => {} ({}), Active {} => {} ({}))",
+                    stringify!($f),
+                    sl_sa.0,
+                    sl_ea.0,
+                    sl_ea.0 - sl_sa.0,
+                    sl_sa.1,
+                    sl_ea.1,
+                    sl_ea.1 - sl_sa.1,
+                );
+                ret
+            }
         }
     }
 }
